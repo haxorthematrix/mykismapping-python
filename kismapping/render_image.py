@@ -112,10 +112,16 @@ def render_image(width: int, height: int, aps: list[list[HeatPoint]]) -> tuple[R
     for _, _, r in params:
         region = region.union(r)
 
-    # y=0 is the top of the image, mapped to the north edge of the region;
-    # y=height-1 maps to the south edge (matching the Haskell `flipArray`).
-    xs = np.linspace(region.west, region.east, width)
-    ys = np.linspace(region.north, region.south, height)
+    # Match the Haskell `polar lo hi s x = (hi - lo)/s * x + lo`: pixel
+    # coordinates exclude the far edge (step of `(hi - lo)/s`, NOT `/(s-1)`).
+    # The y axis is then flipped so the top row (y=0) maps to the row closest
+    # to `north`, matching Haskell's post-`flipArray` orientation.
+    d_lon = region.east - region.west
+    d_lat = region.north - region.south
+    xs = region.west + np.arange(width, dtype=np.float64) * d_lon / width
+    # Pre-flip lat = south + y * d_lat/h; post-flip y' = h - 1 - y, so
+    # lat(y') = south + (h - 1 - y') * d_lat / h.
+    ys = region.south + (height - 1 - np.arange(height, dtype=np.float64)) * d_lat / height
     lon_grid, lat_grid = np.meshgrid(xs, ys)
     px, py, pz = _lonlat_grid_to_euclidean(lon_grid, lat_grid)
 

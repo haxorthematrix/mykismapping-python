@@ -9,7 +9,9 @@ from pathlib import Path
 from .cleanup import remove_invalid_data
 from .heatpoints import essid_map_to_heatpoints
 from .input.kismet_sqlite import read_kismet_sqlite
+from .input.kismet_xml import munge_to_printable, read_kismet_xml
 from .output_file import write_image, write_polygons
+from .output_web import serve_image, serve_polygons
 from .render_image import render_image
 from .render_polygon import render_polygons
 
@@ -87,21 +89,23 @@ def main(argv: list[str] | None = None) -> int:
             print(f"ERROR: unsupported input extension: {raw}", file=sys.stderr)
             return 2
 
+    # SQLite stores the raw ESSID in the device JSON's `name` field; .netxml
+    # stores the munged form (non-printable bytes escaped as `\nnn`). For an
+    # ASCII ESSID these are the same string, so a single union of both forms
+    # covers every lookup case.
+    lookup_essids = list({*args.essid, *(munge_to_printable(e) for e in args.essid)})
+
     essid_map: dict = {}
     if sqlite_paths:
         sm = read_kismet_sqlite(sqlite_paths, args.essid)
         for essid, bssids in sm.items():
             essid_map.setdefault(essid, {}).update(bssids)
     if xml_paths:
-        # XML reader not yet ported.
-        print(
-            "ERROR: .gpsxml input is not yet supported in the Python port. "
-            "Use the Haskell binary or wait for the porting work to finish.",
-            file=sys.stderr,
-        )
-        return 2
+        xm = read_kismet_xml(xml_paths, args.essid)
+        for essid, bssids in xm.items():
+            essid_map.setdefault(essid, {}).update(bssids)
 
-    aps = essid_map_to_heatpoints(essid_map, args.essid)
+    aps = essid_map_to_heatpoints(essid_map, lookup_essids)
     if not aps:
         print(
             f"ERROR: No BSSIDs found with given ESSIDs: {args.essid}",
@@ -113,12 +117,13 @@ def main(argv: list[str] | None = None) -> int:
     aps = remove_invalid_data(args.min_points, aps)
 
     if args.apikey:
-        print(
-            "ERROR: web-server mode is not yet supported in the Python port. "
-            "Use -o for file output.",
-            file=sys.stderr,
-        )
-        return 2
+        if args.polygons:
+            region, polys = render_polygons(aps)
+            serve_polygons(args.apikey, args.port, region, polys)
+        else:
+            region, img = render_image(args.resolution, args.resolution, aps)
+            serve_image(args.apikey, args.port, region, img)
+        return 0
 
     out_dir = Path(args.output)
     if args.polygons:

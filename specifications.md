@@ -116,8 +116,10 @@ Status legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blo
 - [x] Validation: device count, packet count, AP-name JSON parsing match
   Haskell readings on `wardrive.kismet` — 726 devices / 526 Wi-Fi APs /
   4203 usable packets reproduced
-- [ ] `kismapping/input/kismet_xml.py` reads .gpsxml + .netxml
-- [ ] Validation: re-process `kbuchik/wardriving` Ames 2013 file pair through both binaries; same per-BSSID coordinate sets
+- [x] `kismapping/input/kismet_xml.py` reads .gpsxml + .netxml (lxml streaming
+  parser; munge_to_printable for non-ASCII ESSID matching)
+- [x] Validation: Ames 2013 ISU-CARDINAL run vs Haskell — 5/5 polygons match,
+  coord diff max 1.14e-13 deg
 
 ### Geometry & propagation
 - [x] `kismapping/geometry.py`: Polar↔Euclidean (matches `fromPolar`/`toPolar`)
@@ -134,17 +136,21 @@ Status legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blo
 ### Rendering
 - [x] `kismapping/render_polygon.py`: list of polygons matching Haskell `overlay.json`
 - [x] Validation: polygon vertices match Haskell to floating-point precision
-  (max delta `1.42e-14` deg across `osf` + `Hyatt mp=2` + `Spectrum mp=2`
+  (max delta `1.78e-14` deg across `osf` + `Hyatt mp=2` + `Spectrum mp=2`
   runs on `wardrive.kismet`)
-- [x] `kismapping/render_image.py`: PNG raster
-- [x] Validation: 1024×1024 `osf` PNG vs Haskell: identical bounds, mean
-  channel diff 0.317/255, max 9/255, 0% pixels >10/255 (just HSL→RGB
-  rounding)
+- [x] `kismapping/render_image.py`: PNG raster. Required matching the
+  Haskell pixel coordinate formula (`west + i * dLon / w`, *not* numpy's
+  inclusive linspace) so pixels sample at the same geographic points.
+- [x] Validation: 512×512 PNGs on `osf`/`Spectrum mp=2`/`Hyatt mp=2 @ 256`:
+  identical bounds, max channel diff 1/255 — just HSL→RGB rounding noise.
 
 ### Output
 - [x] `kismapping/output_file.py`: write coords.json + overlay.png/json
-- [ ] `kismapping/output_web.py`: Flask server with templated map.html
-- [ ] Bundle the same `map.html` template
+- [x] `kismapping/output_web.py`: Flask server with templated map.html.
+  Endpoints `/`, `/coords`, `/config`, `/overlay.png` (image mode) or
+  `/overlay.json` (polygon mode); ${{KEY}} substituted in the bundled HTML.
+- [x] Bundle the same `map.html` template (copied verbatim from the Haskell
+  project)
 
 ### CLI
 - [x] `kismapping/cli.py`: argparse mirroring the Haskell flag set
@@ -154,5 +160,6 @@ Status legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blo
 ### Verification harness
 - [x] `scripts/compare.py`: run both binaries on a given input, diff
   coords/polygons, perceptual-diff the PNGs
-- [ ] Final acceptance run on `~/Desktop/wardrive.kismet` with at least
-  three ESSID sets and both default and `--min-points 2`
+- [x] Final acceptance: `osf` (default mp), `Spectrum mp=2`, `@Hyatt mp=2`
+  all pass — polygons match at FP precision, PNGs match within 1/255 per
+  channel (HSL rounding only)
