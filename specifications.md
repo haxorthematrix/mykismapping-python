@@ -105,48 +105,54 @@ Status legend: `[ ]` not started · `[~]` in progress · `[x]` done · `[!]` blo
 ### Foundation
 - [x] `mykismapping-python/` directory on Desktop
 - [x] `specifications.md` (this file)
-- [ ] `pyproject.toml` with declared deps
-- [ ] `.gitignore`
-- [ ] `README.md` (initial)
-- [ ] Empty `kismapping/` package + tests dir
-- [ ] Init git, create remote `haxorthematrix/mykismapping-python`, first push
+- [x] `pyproject.toml` with declared deps
+- [x] `.gitignore`
+- [x] `README.md` (initial)
+- [x] Empty `kismapping/` package + tests dir
+- [x] Init git, create remote `haxorthematrix/mykismapping-python`, first push
 
 ### Input parsing
-- [ ] `kismapping/input/kismet_sqlite.py` reads .kismet, returns EssidMap-equivalent
-- [ ] Validation: device count, packet count, AP-name JSON parsing match
-  Haskell readings on `wardrive.kismet`
+- [x] `kismapping/input/kismet_sqlite.py` reads .kismet, returns EssidMap-equivalent
+- [x] Validation: device count, packet count, AP-name JSON parsing match
+  Haskell readings on `wardrive.kismet` — 726 devices / 526 Wi-Fi APs /
+  4203 usable packets reproduced
 - [ ] `kismapping/input/kismet_xml.py` reads .gpsxml + .netxml
 - [ ] Validation: re-process `kbuchik/wardriving` Ames 2013 file pair through both binaries; same per-BSSID coordinate sets
 
 ### Geometry & propagation
-- [ ] `kismapping/geometry.py`: Polar↔Euclidean (matches `fromPolar`/`toPolar`)
-- [ ] `kismapping/propagation.py`: `dbToPower`/`dbToDistance`/`strength`/`falloffDistance`/`centerOf`/`perimeter`
+- [x] `kismapping/geometry.py`: Polar↔Euclidean (matches `fromPolar`/`toPolar`)
+- [x] `kismapping/propagation.py`: `dbToPower`/`dbToDistance`/`strength`/`falloffDistance`/`centerOf`/`perimeter`
 - [ ] Unit tests asserting parity with the Haskell formulas on a handful of canned inputs
 
 ### Cleanup
-- [ ] `kismapping/cleanup.py`: per-point outlier (95% CI on falloff distance),
+- [x] `kismapping/cleanup.py`: per-point outlier (95% CI on falloff distance),
   `min-points` filter, per-AP outlier (95% CI on convex-hull radius)
-- [ ] Validation: AP counts after cleanup match Haskell counts on wardrive.kismet
+- [x] Validation: post-cleanup AP counts match Haskell on `wardrive.kismet`
+  for `osf`/`Hyatt`/`Spectrum` configurations at both default and
+  `--min-points 2`
 
 ### Rendering
-- [ ] `kismapping/render_polygon.py`: list of polygons matching Haskell `overlay.json`
-- [ ] Validation: polygon path vertices within 1e-6 of Haskell output for
-  `osf` and `@Hyatt_WiFi` runs
-- [ ] `kismapping/render_image.py`: PNG raster
-- [ ] Validation: visual diff vs Haskell PNG on `osf` and combined run
+- [x] `kismapping/render_polygon.py`: list of polygons matching Haskell `overlay.json`
+- [x] Validation: polygon vertices match Haskell to floating-point precision
+  (max delta `1.42e-14` deg across `osf` + `Hyatt mp=2` + `Spectrum mp=2`
+  runs on `wardrive.kismet`)
+- [x] `kismapping/render_image.py`: PNG raster
+- [x] Validation: 1024×1024 `osf` PNG vs Haskell: identical bounds, mean
+  channel diff 0.317/255, max 9/255, 0% pixels >10/255 (just HSL→RGB
+  rounding)
 
 ### Output
-- [ ] `kismapping/output_file.py`: write coords.json + overlay.png/json
+- [x] `kismapping/output_file.py`: write coords.json + overlay.png/json
 - [ ] `kismapping/output_web.py`: Flask server with templated map.html
 - [ ] Bundle the same `map.html` template
 
 ### CLI
-- [ ] `kismapping/cli.py`: argparse mirroring the Haskell flag set
-- [ ] `kismapping/__main__.py` so `python -m kismapping ...` works
-- [ ] Console script entry point so `kismapping ...` works after `pip install`
+- [x] `kismapping/cli.py`: argparse mirroring the Haskell flag set
+- [x] `kismapping/__main__.py` so `python -m kismapping ...` works
+- [x] Console script entry point so `kismapping ...` works after `pip install`
 
 ### Verification harness
-- [ ] `scripts/compare.py`: run both binaries on a given input, diff
+- [x] `scripts/compare.py`: run both binaries on a given input, diff
   coords/polygons, perceptual-diff the PNGs
 - [ ] Final acceptance run on `~/Desktop/wardrive.kismet` with at least
   three ESSID sets and both default and `--min-points 2`
