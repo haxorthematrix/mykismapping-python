@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mykismapping"
+version = "0.1.0"
+description = "WiFi heatmap generator from Kismet captures (Python port of kismapping)"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "GPL-2.0-or-later" }
+authors = [{ name = "Larry Pesce" }]
+dependencies = [
+    "numpy>=1.24",
+    "scipy>=1.10",
+    "Pillow>=10.0",
+    "Flask>=3.0",
+    "lxml>=4.9",
+]
+
+[project.scripts]
+kismapping = "kismapping.cli:main"
+
+[tool.setuptools]
+packages = ["kismapping", "kismapping.input"]
+
+[tool.setuptools.package-data]
+kismapping = ["templates/*.html"]
